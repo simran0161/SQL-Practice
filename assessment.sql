@@ -163,7 +163,45 @@ GROUP BY o.order_id, o.order_date, c.customer_id, c.first_name, c.last_name, p.p
 HAVING SUM(oi.quantity) > 1
 ORDER BY o.order_date;
 
+-- Question 11 Retrieve the Number of Orders and Total Revenue for Each Status
+SELECT s.status_id,s.status_name,COUNT(o.order_id) AS total_orders,
+COALESCE(SUM(o.total_amount), 0.00) AS total_revenue
+FROM order_schema.status s
+LEFT JOIN order_schema.orders o ON s.status_id = o.status_id
+GROUP BY s.status_id, s.status_name
+ORDER BY s.status_id;
 
+-- Question 12 Find Customers Who Have Ordered More Than a Specific Product (e.g., "Laptop") 
+SELECT c.customer_id,c.first_name,c.last_name,p.product_name,SUM(oi.quantity) AS total_quantity
+FROM order_schema.customer c
+JOIN order_schema.orders o ON c.customer_id = o.customer_id
+JOIN order_schema.order_items oi ON o.order_id = oi.order_id
+JOIN order_schema.product p ON oi.product_id = p.product_id
+WHERE p.product_name = 'Laptop'
+GROUP BY c.customer_id, c.first_name, c.last_name, p.product_name
+HAVING SUM(oi.quantity) > 1;
+
+-- Question 13 Find the Products That Have Never Been Ordered  
+SELECT p.product_id,p.product_name,p.price,p.stock_quantity
+FROM order_schema.product p
+LEFT JOIN order_schema.order_items oi ON p.product_id = oi.product_id
+WHERE oi.product_id IS NULL;
+
+-- Question 14  Get the Total Quantity of Products Ordered in the Last 7 Days 
+SELECT SUM(oi.quantity) AS total_quantity_ordered
+FROM order_schema.order_items oi
+JOIN order_schema.orders o ON oi.order_id = o.order_id
+WHERE o.order_date >= CURRENT_DATE - INTERVAL '7 days';
+
+-- Question 15 Create a view named product_details that includes all columns from the product table.
+CREATE VIEW order_schema.product_details AS SELECT * FROM order_schema.product;
+
+-- Question 16 Create a view named order_summary that includes the order_id, 
+-- customer_id, order_date, total_amount, and status_name (from the status table) for each order.
+CREATE VIEW order_schema.order_summary AS
+SELECT o.order_id,o.customer_id,o.order_date,o.total_amount,s.status_name
+FROM order_schema.orders o
+JOIN order_schema.status s ON o.status_id = s.status_id;
 
 
 
